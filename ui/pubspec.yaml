@@ -1,0 +1,33 @@
+name: desktop_icon_toggle_ui
+description: Desktop Icon Toggle settings UI
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Windows window management
+  window_manager: ^0.5.2
+
+  # Windows dynamic accent colors
+  dynamic_color: ^1.9.0
+
+  # Material animations
+  animations: ^2.2.0
+
+  # Store first-run configuration state
+  shared_preferences: ^2.5.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
