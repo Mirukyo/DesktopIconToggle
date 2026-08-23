@@ -5,6 +5,7 @@
 #include "Resources.h"
 
 #include <oleacc.h>
+#include <windows.h>
 #include <cstdlib>
 
 #pragma comment(lib, "oleacc.lib")
@@ -28,85 +29,169 @@ namespace
     bool g_enabled = true;
 
     // --------------------------------------------------------
-    // Check whether the point belongs to the desktop.
+    // Find the desktop SysListView32.
     // --------------------------------------------------------
 
-    bool IsDesktopWindowAtPoint(POINT point)
+    HWND GetDesktopListView()
     {
-        HWND hwnd = WindowFromPoint(point);
+        HWND shellView =
+            GetDesktopShellView();
 
+        if (!shellView)
+        {
+            return nullptr;
+        }
+
+        return FindWindowExW(
+            shellView,
+            nullptr,
+            L"SysListView32",
+            nullptr
+        );
+    }
+
+    // --------------------------------------------------------
+    // Check whether hwnd belongs to the desktop Shell view.
+    //
+    // This works both when the desktop icon ListView is visible
+    // and when it has been hidden.
+    // --------------------------------------------------------
+
+    bool IsDesktopShellWindow(
+        HWND hwnd)
+    {
         if (!hwnd)
         {
             return false;
         }
 
-        wchar_t className[256]{};
+        HWND shellView =
+            GetDesktopShellView();
 
-        HWND current = hwnd;
+        if (!shellView)
+        {
+            return false;
+        }
+
+        // The exact SHELLDLL_DefView itself.
+        if (hwnd == shellView)
+        {
+            return true;
+        }
+
+        // A child of SHELLDLL_DefView.
+        if (IsChild(
+                shellView,
+                hwnd))
+        {
+            return true;
+        }
+
+        // The desktop ListView.
+        HWND listView =
+            GetDesktopListView();
+
+        if (listView &&
+            hwnd == listView)
+        {
+            return true;
+        }
+
+        // Walk up the parent chain.
+        HWND current =
+            hwnd;
 
         while (current)
         {
-            GetClassNameW(
-                current,
-                className,
-                256
-            );
-
-            if (wcscmp(
-                    className,
-                    L"SysListView32") == 0)
+            if (current == shellView)
             {
                 return true;
             }
 
-            if (wcscmp(
-                    className,
-                    L"SHELLDLL_DefView") == 0)
-            {
-                return true;
-            }
+            current =
+                GetParent(current);
+        }
 
-            if (wcscmp(
-                    className,
-                    L"Progman") == 0)
-            {
-                return true;
-            }
+        // ----------------------------------------------------
+        // When the desktop ListView is hidden, Windows may
+        // return the WorkerW/Progman host itself.
+        //
+        // Find the direct parent of SHELLDLL_DefView and accept
+        // only that exact host window.
+        //
+        // This is intentionally NOT a generic "WorkerW /
+        // Progman is desktop" check, so application windows
+        // cannot accidentally pass.
+        // ----------------------------------------------------
 
-            if (wcscmp(
-                    className,
-                    L"WorkerW") == 0)
-            {
-                return true;
-            }
+        HWND shellHost =
+            GetParent(shellView);
 
-            current = GetParent(current);
+        if (shellHost &&
+            hwnd == shellHost)
+        {
+            return true;
         }
 
         return false;
     }
 
     // --------------------------------------------------------
-    // Check whether the point is on a desktop icon.
-    //
-    // Uses Windows Accessibility API instead of
-    // LVM_HITTEST, avoiding direct ListView messaging.
+    // Check whether the point is inside the desktop Shell area.
     // --------------------------------------------------------
 
-    bool IsDesktopIconAtPoint(POINT point)
+    bool IsDesktopWindowAtPoint(
+        POINT point)
     {
-        IAccessible* accessible = nullptr;
+        HWND hwnd =
+            WindowFromPoint(point);
+
+        if (!hwnd)
+        {
+            return false;
+        }
+
+        return IsDesktopShellWindow(
+            hwnd
+        );
+    }
+
+    // --------------------------------------------------------
+    // Check whether point is on a desktop icon.
+    //
+    // Uses Windows Accessibility API instead of LVM_HITTEST.
+    // --------------------------------------------------------
+
+    bool IsDesktopIconAtPoint(
+        POINT point)
+    {
+        // If the desktop ListView itself is hidden, there cannot
+        // be a visible desktop icon under the cursor.
+        HWND listView =
+            GetDesktopListView();
+
+        if (!listView ||
+            !IsWindowVisible(listView))
+        {
+            return false;
+        }
+
+        IAccessible* accessible =
+            nullptr;
+
         VARIANT child{};
 
         VariantInit(&child);
 
-        HRESULT hr = AccessibleObjectFromPoint(
-            point,
-            &accessible,
-            &child
-        );
+        HRESULT hr =
+            AccessibleObjectFromPoint(
+                point,
+                &accessible,
+                &child
+            );
 
-        if (FAILED(hr) || !accessible)
+        if (FAILED(hr) ||
+            !accessible)
         {
             VariantClear(&child);
             return false;
@@ -131,14 +216,20 @@ namespace
     // Check whether point is an empty desktop area.
     // --------------------------------------------------------
 
-    bool IsEmptyDesktopArea(POINT point)
+    bool IsEmptyDesktopArea(
+        POINT point)
     {
-        if (!IsDesktopWindowAtPoint(point))
+        // The point must belong to the actual Windows desktop
+        // Shell area, not an application window.
+        if (!IsDesktopWindowAtPoint(
+                point))
         {
             return false;
         }
 
-        if (IsDesktopIconAtPoint(point))
+        // When icons are visible, reject actual icon clicks.
+        if (IsDesktopIconAtPoint(
+                point))
         {
             return false;
         }
@@ -160,17 +251,21 @@ namespace
         }
 
         SHORT state =
-            GetAsyncKeyState(VK_LBUTTON);
+            GetAsyncKeyState(
+                VK_LBUTTON
+            );
 
         bool leftDown =
             (state & 0x8000) != 0;
 
         // Detect UP -> DOWN transition.
-        if (leftDown && !g_leftDown)
+        if (leftDown &&
+            !g_leftDown)
         {
             POINT point{};
 
-            if (GetCursorPos(&point))
+            if (GetCursorPos(
+                    &point))
             {
                 DWORD now =
                     GetTickCount();
@@ -192,7 +287,8 @@ namespace
 
                 bool doubleClick =
                     g_lastClickTime != 0 &&
-                    now - g_lastClickTime <=
+                    now -
+                            g_lastClickTime <=
                         doubleClickTime &&
                     dx <=
                         GetSystemMetrics(
@@ -203,13 +299,16 @@ namespace
                             SM_CYDOUBLECLK
                         );
 
-                g_lastClickTime = now;
-                g_lastClickPoint = point;
+                g_lastClickTime =
+                    now;
+
+                g_lastClickPoint =
+                    point;
 
                 if (doubleClick)
                 {
-                    // Only empty desktop areas trigger.
-                    if (IsEmptyDesktopArea(point))
+                    if (IsEmptyDesktopArea(
+                            point))
                     {
                         ToggleDesktopIcons();
                     }
@@ -220,7 +319,8 @@ namespace
             }
         }
 
-        g_leftDown = leftDown;
+        g_leftDown =
+            leftDown;
     }
 
     // --------------------------------------------------------
@@ -241,29 +341,33 @@ namespace
 // Initialize mouse manager
 // ============================================================
 
-bool InitializeMouseManager(HWND mainWindow)
+bool InitializeMouseManager(
+    HWND mainWindow)
 {
     if (!mainWindow)
     {
         return false;
     }
 
-    g_mainWindow = mainWindow;
+    g_mainWindow =
+        mainWindow;
 
     g_enabled =
-        GetSettings().doubleClickEnabled;
+        GetSettings()
+            .doubleClickEnabled;
 
     g_leftDown = false;
     g_lastClickTime = 0;
     g_lastClickPoint = {};
 
     // Create a timer associated with this thread.
-    g_timerId = SetTimer(
-        nullptr,
-        0,
-        20,
-        MouseTimerProc
-    );
+    g_timerId =
+        SetTimer(
+            nullptr,
+            0,
+            20,
+            MouseTimerProc
+        );
 
     return g_timerId != 0;
 }
@@ -294,7 +398,8 @@ void ShutdownMouseManager()
 void SetDoubleClickDetectionEnabled(
     bool enabled)
 {
-    g_enabled = enabled;
+    g_enabled =
+        enabled;
 
     if (!enabled)
     {

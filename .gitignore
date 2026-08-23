@@ -117,3 +117,10 @@ coverage/
 
 *.local
 local.properties
+
+# ------------------------------------------------------------
+# Local Release packages
+# ------------------------------------------------------------
+
+build_release.bat
+releases/
