@@ -12,6 +12,7 @@ ui/build/
 ui/.flutter-plugins
 ui/.flutter-plugins-dependencies
 ui/.metadata
+ui/devtools_options.yaml
 
 # Flutter Windows generated files
 ui/windows/flutter/ephemeral/
