@@ -1,56 +1,48 @@
-# DesktopIconToggle
+# 桌面图标开关
 
-一个用于 Windows 的桌面图标隐藏/显示工具。
+**DesktopIconToggle** 是一个用于 Windows 的桌面图标隐藏/显示工具。
 
-## 项目简介
+通过双击桌面、全局快捷键或系统托盘，可以快速切换桌面图标的显示状态。
 
-DesktopIconToggle 可以快速隐藏或显示 Windows 桌面图标，并提供简洁的设置界面。
+## 功能
 
-项目采用 **C++ + Flutter** 开发：
+* 双击桌面空白区域隐藏/显示桌面图标
+* 全局快捷键隐藏/显示桌面图标
+* 自定义快捷键
+* 首次启动快捷键设置
+* Windows 系统托盘
+* 开机自动启动
+* 支持 Windows 深色 / 浅色主题
+* 自定义应用与托盘图标
 
-- C++：负责 Windows 系统功能、桌面图标、全局快捷键、鼠标检测和系统托盘。
-- Flutter：负责设置界面和用户交互。
+## 技术
 
-## 主要功能
+* Flutter
+* Dart
+* C++
+* CMake
+* Windows API
 
-- 双击桌面空白区域隐藏/显示桌面图标
-- 全局快捷键隐藏/显示桌面图标
-- 自定义全局快捷键
-- 首次启动快捷键设置引导
-- Windows 系统托盘
-- 开机自动启动
-- Material 3 设置界面
-- 支持 Windows 明暗主题
-- 使用自定义应用图标
-
-## 运行
+## 构建
 
 进入 Flutter 项目目录：
 
 ```powershell
-cd F:\DesktopIconToggle\ui
+cd ui
 ```
 
-运行：
+安装依赖：
 
 ```powershell
-flutter run -d windows
+flutter pub get
 ```
 
-## 构建
+构建 Windows Release：
 
 ```powershell
 flutter build windows --release
 ```
 
-Release 文件位于：
+## 许可证
 
-```text
-ui\build\windows\x64\runner\Release\
-```
-
-## 项目状态
-
-当前项目已经实现基本的桌面图标隐藏/显示、快捷键、托盘和设置功能。
-
-后续可以继续完善界面设计、状态同步和其他 Windows 功能。
+本项目使用开源许可证。

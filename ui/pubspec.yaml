@@ -2,7 +2,7 @@ name: desktop_icon_toggle_ui
 description: Desktop Icon Toggle settings UI
 publish_to: "none"
 
-version: 1.0.0+1
+version: 1.0.2+3
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
@@ -22,6 +22,9 @@ dependencies:
 
   # Store first-run configuration state
   shared_preferences: ^2.5.3
+
+  url_launcher: ^6.3.2
+  package_info_plus: ^10.2.1
 
 dev_dependencies:
   flutter_test:
