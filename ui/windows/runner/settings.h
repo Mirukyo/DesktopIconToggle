@@ -19,7 +19,8 @@ struct AppSettings
 
     // 快捷键修饰键
     // 默认：Ctrl + Alt
-    UINT hotkeyModifiers = MOD_CONTROL | MOD_ALT;
+    UINT hotkeyModifiers =
+        MOD_CONTROL | MOD_ALT;
 
     // 快捷键主键
     // 默认：H
@@ -54,3 +55,6 @@ void SetStartupEnabled(bool enabled);
 
 // 获取当前程序 EXE 路径
 std::wstring GetExecutablePath();
+
+// 检查 Windows 启动项是否指向当前 EXE
+bool IsStartupPathCurrent();

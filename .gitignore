@@ -17,6 +17,9 @@ ui/devtools_options.yaml
 # Flutter Windows generated files
 ui/windows/flutter/ephemeral/
 
+# Local application data
+ui/data/
+
 # ------------------------------------------------------------
 # IDE
 # ------------------------------------------------------------
